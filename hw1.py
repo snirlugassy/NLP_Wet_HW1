@@ -5,7 +5,7 @@ import numpy as np
 from utils import is_numeric, weight_dot_feature_vec
 import pickle
 from scipy.optimize import fmin_l_bfgs_b
-
+from datetime import datetime
 # training_data = "/content/drive/MyDrive/Technion/Semester 6/NLP/Homework/Wet 1/data/train1.wtag"
 training_data = "data/train1.wtag"
 weights_path = "weights.pkl"
@@ -409,6 +409,9 @@ class Viterbi:
 
 
 if __name__ == "__main__":
+    with open("log.txt", "a") as log_file:
+        log_file.write("Started: " + datetime.now().isoformat() + "\n")
+        
     data = DataProcessing(training_data)
     data.process()
 
@@ -444,6 +447,10 @@ if __name__ == "__main__":
 
     with open(weights_path, 'wb') as weights_file:
         pickle.dump(optimal_params, weights_file)
+        
+    with open("log.txt", "a") as log_file:
+        log_file.write("Finished: " + datetime.now().isoformat() + "\n")
+        
 
 
 
