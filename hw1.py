@@ -279,38 +279,12 @@ class TaggingFeatureGenerator:
         return None
 
 
-data = DataProcessing(training_data)
-data.process()
-
-histories = data.histories
-tags = list(data.tags)
-
-gen = TaggingFeatureGenerator(threshold=10)
-gen.generate_features(histories)
-
-dim = gen.feature_dim
-print("Dimension = ", dim)
-
-try:
-    with open(weights_path, 'rb') as weights_file:
-            last_run_params = pickle.load(weights_file)
-            w_0 = last_run_params[0]
-            print("Weights were found in file")
-            if len(w_0) != dim:
-                print("Dimension of weights are incorrect, settings random weights")
-                w_0 = np.random.random(dim)
-except FileNotFoundError:
-    print("Weights were not found")
-    print("Settings random weights")
-    w_0 = np.random.random(dim)
-    # with open(weights_path, "wb") as weights_file:
-    #     pickle.dump(w_0, weights_file)
-
-
 def likelihood(v, H, f, Y, reg_param=1):
     grad = np.zeros(len(v))
     L = 0
-    for h in H:
+    H_counter = Counter(H)
+    for h in H_counter.keys():
+        h_count = H_counter[h]
         dot = np.zeros(len(Y))
         feature_vectors = list()
         for j in range(len(Y)):
@@ -318,17 +292,17 @@ def likelihood(v, H, f, Y, reg_param=1):
             feature_vectors.append(f(h,Y[j]))
             dot[j] = weight_dot_feature_vec(v, feature_vectors[j])
             if Y[j] == h[4]:
-                L += dot[j]
+                L += h_count * dot[j]
                 for feature in feature_vectors[j]:
-                    grad[feature] += 1
+                    grad[feature] += h_count
         normalizer = np.sum(np.exp(dot))
         
         for i in range(len(feature_vectors)):
             for feature in feature_vectors[i]:
-                grad[feature] -= np.exp(dot[i]) / normalizer
+                grad[feature] -= h_count * (np.exp(dot[i]) / normalizer)
             # feature_vectors[i] = feature_vectors[i] * np.exp(dot[i]) / normalizer
         # grad -= sum(feature_vectors)
-        L -= np.log(normalizer)
+        L -= h_count * np.log(normalizer)
     L -= 0.5 * reg_param * np.dot(v,v)
     grad -= reg_param * v
     return (-1)*L, (-1)*grad
@@ -336,34 +310,58 @@ def likelihood(v, H, f, Y, reg_param=1):
 
 # likelihood(w_0, histories, gen.transform, tags)
 
+if __name__ == "__main__":
+    data = DataProcessing(training_data)
+    data.process()
+
+    histories = data.histories
+    tags = list(data.tags)
+
+    gen = TaggingFeatureGenerator(threshold=10)
+    gen.generate_features(histories)
+
+    dim = gen.feature_dim
+    print("Dimension = ", dim)
+
+    try:
+        with open(weights_path, 'rb') as weights_file:
+            last_run_params = pickle.load(weights_file)
+            w_0 = last_run_params[0]
+            print("Weights were found in file")
+            if len(w_0) != dim:
+                print("Dimension of weights are incorrect, settings random weights")
+                w_0 = np.random.random(dim)
+    except FileNotFoundError:
+        print("Weights were not found")
+        print("Settings random weights")
+        w_0 = np.random.random(dim)
+        # with open(weights_path, "wb") as weights_file:
+        #     pickle.dump(w_0, weights_file)
 
 
-# # define 'args', that holds the arguments arg_1, arg_2, ... for 'calc_objective_per_iter' 
-args = (histories, gen.transform, tags, 2)
-optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=100, iprint=10)
-weights = optimal_params[0]
+    # # define 'args', that holds the arguments arg_1, arg_2, ... for 'calc_objective_per_iter' 
+    args = (histories, gen.transform, tags, 2)
+    optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=100, iprint=10)
+    weights = optimal_params[0]
 
-# # Now you can save weights using pickle.dump() - 'weights_path' specifies where the weight file will be saved.
-# # IMPORTANT - we expect to recieve weights in 'pickle' format, don't use any other format!!
-# weights_path = 'your_path_to_weights_dir/trained_weights_data_i.pkl' # i identifies which dataset this is trained on
-with open(weights_path, 'wb') as weights_file:
-    pickle.dump(optimal_params, weights_file)
+    with open(weights_path, 'wb') as weights_file:
+        pickle.dump(optimal_params, weights_file)
 
 
-# def softmax(weights, history, f, Y):
-#     y = Y[0]
-#     x = np.zeros(len(Y))
-#     normalizer = 0
-#     for i in range(len(Y)):
-#         y = Y[i]
-#         dot = weight_dot_feature_vec(v, f(history,y))
-#         x[i] = np.exp(dot)
-#         normalizer += x[i]
-      
-#     return x / normalizer
+    # def softmax(weights, history, f, Y):
+    #     y = Y[0]
+    #     x = np.zeros(len(Y))
+    #     normalizer = 0
+    #     for i in range(len(Y)):
+    #         y = Y[i]
+    #         dot = weight_dot_feature_vec(v, f(history,y))
+    #         x[i] = np.exp(dot)
+    #         normalizer += x[i]
+        
+    #     return x / normalizer
 
-# for i in range(10):
-#     h = histories[i]
-#     x = softmax(v, h, gen.transform, tags)
-#     print(x)
-#     print(sum(x))
+    # for i in range(10):
+    #     h = histories[i]
+    #     x = softmax(v, h, gen.transform, tags)
+    #     print(x)
+    #     print(sum(x))
