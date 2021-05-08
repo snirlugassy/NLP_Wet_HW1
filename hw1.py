@@ -406,12 +406,9 @@ class Viterbi:
         
         return tags_predict
         
-        
-        
 
 
-
-def main():
+if __name__ == "__main__":
     data = DataProcessing(training_data)
     data.process()
 
