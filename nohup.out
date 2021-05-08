@@ -1,0 +1,59 @@
+python: can't open file 'hw1': [Errno 2] No such file or directory
+Dimension =  5252
+Weights were found in file
+ This problem is unconstrained.
+RUNNING THE L-BFGS-B CODE
+
+           * * *
+
+Machine precision = 2.220D-16
+ N =         5252     M =           10
+
+At X0         0 variables are exactly at the bounds
+
+At iterate    0    f=  1.63072D+05    |proj g|=  7.09132D+03
+
+At iterate   10    f=  7.03989D+04    |proj g|=  2.55154D+03
+
+At iterate   20    f=  5.34967D+04    |proj g|=  3.61771D+02
+
+At iterate   30    f=  4.75356D+04    |proj g|=  1.09534D+02
+
+At iterate   40    f=  4.56767D+04    |proj g|=  1.64183D+02
+
+At iterate   50    f=  4.46962D+04    |proj g|=  7.53573D+01
+
+At iterate   60    f=  4.43114D+04    |proj g|=  1.75151D+02
+
+At iterate   70    f=  4.41539D+04    |proj g|=  4.80942D+01
+
+At iterate   80    f=  4.40870D+04    |proj g|=  4.96245D+01
+
+At iterate   90    f=  4.40559D+04    |proj g|=  1.46270D+01
+
+At iterate  100    f=  4.40419D+04    |proj g|=  1.01537D+01
+
+           * * *
+
+Tit   = total number of iterations
+Tnf   = total number of function evaluations
+Tnint = total number of segments explored during Cauchy searches
+Skip  = number of BFGS updates skipped
+Nact  = number of active bounds at final generalized Cauchy point
+Projg = norm of the final projected gradient
+F     = final function value
+
+           * * *
+
+   N    Tit     Tnf  Tnint  Skip  Nact     Projg        F
+ 5252    100    105      1     0     0   1.015D+01   4.404D+04
+  F =   44041.886829867653     
+
+STOP: TOTAL NO. of ITERATIONS REACHED LIMIT                 
+
+ Cauchy                time 0.000E+00 seconds.
+ Subspace minimization time 0.000E+00 seconds.
+ Line search           time 0.000E+00 seconds.
+
+ Total User time 0.000E+00 seconds.
+

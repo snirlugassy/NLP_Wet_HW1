@@ -339,8 +339,8 @@ def likelihood(v, H, f, Y, reg_param=1):
 
 
 # # define 'args', that holds the arguments arg_1, arg_2, ... for 'calc_objective_per_iter' 
-args = (histories, gen.transform, tags)
-optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=3, iprint=1)
+args = (histories, gen.transform, tags, 2)
+optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=100, iprint=10)
 weights = optimal_params[0]
 
 # # Now you can save weights using pickle.dump() - 'weights_path' specifies where the weight file will be saved.
