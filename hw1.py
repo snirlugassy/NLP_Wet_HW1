@@ -19,8 +19,9 @@ class DataProcessing:
         self.histories = list()
         self.tags = set("*")
         with open(training_data, "r") as file:
-            for line in file.readlines():
-                self.data.append(DataProcessing.split_line(line))
+            self.data = [DataProcessing.split_line(line) for line in file.readlines()]
+            # for line in file.readlines():
+            #     self.data.append(DataProcessing.split_line(line))
 
     @staticmethod
     def split_line(line):
