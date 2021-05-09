@@ -1,3 +1,5 @@
+from numba import jit
+import numpy as np
 
 
 def is_numeric(x):
@@ -27,3 +29,16 @@ def weight_dot_feature_vec(v,f):
     for x in f:
         product += v[x]
     return product
+
+
+def softmax(weights, history, f, Y):
+    y = Y[0]
+    x = np.zeros(len(Y))
+    normalizer = 0
+    for i in range(len(Y)):
+        y = Y[i]
+        dot = weight_dot_feature_vec(v, f(history,y))
+        x[i] = np.exp(dot)
+        normalizer += x[i]
+    
+    return x / normalizer
