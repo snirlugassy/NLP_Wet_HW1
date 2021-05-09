@@ -1,3 +1,5 @@
 weights.pkl
 log.txt
 weights_backup.pkl
+.vscode
+__pycache__
