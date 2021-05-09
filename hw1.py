@@ -1,11 +1,14 @@
 import string
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, defaultdict
 from enum import Enum
 import numpy as np
 from utils import is_numeric, weight_dot_feature_vec
 import pickle
 from scipy.optimize import fmin_l_bfgs_b
 from datetime import datetime
+from numba import jit
+
+
 # training_data = "/content/drive/MyDrive/Technion/Semester 6/NLP/Homework/Wet 1/data/train1.wtag"
 training_data = "data/train1.wtag"
 weights_path = "weights.pkl"
@@ -279,50 +282,87 @@ class TaggingFeatureGenerator:
         return None
 
 
+def history_likelihood(v, h, f, Y, h_count):
+    hl = 0
+    hl_grad = np.zeros(len(v))
+    dot = np.zeros(len(Y))
+    feature_vectors = list()
+    for j in range(len(Y)):
+        feature_vectors.append(f(h,Y[j]))
+        dot[j] = weight_dot_feature_vec(v, feature_vectors[j])
+        if Y[j] == h[4]:
+            hl += h_count * dot[j]
+            for feature in feature_vectors[j]:
+                hl_grad[feature] += h_count
+    normalizer = np.sum(np.exp(dot))
+    
+    for i in range(len(feature_vectors)):
+        for feature in feature_vectors[i]:
+            hl_grad[feature] -= h_count * (np.exp(dot[i]) / normalizer)
+    hl -= h_count * np.log(normalizer)
+    return hl, hl_grad
+    
+    
 def likelihood(v, H, f, Y, reg_param=1):
+    print("likelihood")
     grad = np.zeros(len(v))
     L = 0
-    H_counter = Counter(H)
-    for h in H_counter.keys():
-        h_count = H_counter[h]
-        dot = np.zeros(len(Y))
-        feature_vectors = list()
-        for j in range(len(Y)):
-            # f(x,y_j)
-            feature_vectors.append(f(h,Y[j]))
-            dot[j] = weight_dot_feature_vec(v, feature_vectors[j])
-            if Y[j] == h[4]:
-                L += h_count * dot[j]
-                for feature in feature_vectors[j]:
-                    grad[feature] += h_count
-        normalizer = np.sum(np.exp(dot))
-        
-        for i in range(len(feature_vectors)):
-            for feature in feature_vectors[i]:
-                grad[feature] -= h_count * (np.exp(dot[i]) / normalizer)
-            # feature_vectors[i] = feature_vectors[i] * np.exp(dot[i]) / normalizer
-        # grad -= sum(feature_vectors)
-        L -= h_count * np.log(normalizer)
+    histories_counter = Counter(H)
+    for h in histories_counter.keys():
+        hl, hl_grad = history_likelihood(v,h,f,Y,histories_counter[h])
+        L += hl
+        grad += hl_grad
     L -= 0.5 * reg_param * np.dot(v,v)
     grad -= reg_param * v
     return (-1)*L, (-1)*grad
+    
+    
+    
+# @jit(nopython=True, parallel=True)
+# def likelihood(v, H, f, Y, reg_param=1):
+#     grad = np.zeros(len(v))
+#     L = 0
+#     H_counter = Counter(H)
+#     for h in H_counter.keys():
+#         h_count = H_counter[h]
+#         dot = np.zeros(len(Y))
+#         feature_vectors = list()
+#         for j in range(len(Y)):
+#             # f(x,y_j)
+#             feature_vectors.append(f(h,Y[j]))
+#             dot[j] = weight_dot_feature_vec(v, feature_vectors[j])
+#             if Y[j] == h[4]:
+#                 L += h_count * dot[j]
+#                 for feature in feature_vectors[j]:
+#                     grad[feature] += h_count
+#         normalizer = np.sum(np.exp(dot))
+        
+#         for i in range(len(feature_vectors)):
+#             for feature in feature_vectors[i]:
+#                 grad[feature] -= h_count * (np.exp(dot[i]) / normalizer)
+#             # feature_vectors[i] = feature_vectors[i] * np.exp(dot[i]) / normalizer
+#         # grad -= sum(feature_vectors)
+#         L -= h_count * np.log(normalizer)
+#     L -= 0.5 * reg_param * np.dot(v,v)
+#     grad -= reg_param * v
+#     return (-1)*L, (-1)*grad
     
 
 # likelihood(w_0, histories, gen.transform, tags)
 
 
 # Calculate for all possible y in Y
-# def softmax(weights, history, f, Y):
-#     y = Y[0]
-#     x = np.zeros(len(Y))
-#     normalizer = 0
-#     for i in range(len(Y)):
-#         y = Y[i]
-#         dot = weight_dot_feature_vec(v, f(history,y))
-#         x[i] = np.exp(dot)
-#         normalizer += x[i]
+def softmax(weights, history, f, Y):
+    y = Y[0]
+    x = np.zeros(len(Y))
+    normalizer = 0
+    for i in range(len(Y)):
+        y = Y[i]
+        dot = weight_dot_feature_vec(v, f(history,y))
+        x[i] = np.exp(dot)
+        normalizer += x[i]
     
-#     return x / normalizer
+    return x / normalizer
 
 # Calculate for a single y in Y
 def softmax(weights, history, f, Y):
@@ -442,7 +482,7 @@ if __name__ == "__main__":
 
     # # define 'args', that holds the arguments arg_1, arg_2, ... for 'calc_objective_per_iter' 
     args = (histories, gen.transform, tags, 2)
-    optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=100, iprint=10)
+    optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=100, iprint=1, maxls=4)
     weights = optimal_params[0]
 
     with open(weights_path, 'wb') as weights_file:

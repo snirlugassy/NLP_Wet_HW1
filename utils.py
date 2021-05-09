@@ -1,4 +1,4 @@
-
+from numba import jit
 
 def is_numeric(x):
     """
