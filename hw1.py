@@ -2,7 +2,7 @@ import string
 from collections import OrderedDict, Counter, defaultdict
 from enum import Enum
 import numpy as np
-from utils import is_numeric, weight_dot_feature_vec
+from utils import is_numeric, weight_dot_feature_vec, softmax
 import pickle
 from scipy.optimize import fmin_l_bfgs_b
 from datetime import datetime
@@ -304,7 +304,6 @@ def history_likelihood(v, h, f, Y, h_count):
     
     
 def likelihood(v, H, f, Y, reg_param=1):
-    print("likelihood")
     grad = np.zeros(len(v))
     L = 0
     histories_counter = Counter(H)
@@ -352,31 +351,20 @@ def likelihood(v, H, f, Y, reg_param=1):
 
 
 # Calculate for all possible y in Y
-def softmax(weights, history, f, Y):
-    y = Y[0]
-    x = np.zeros(len(Y))
-    normalizer = 0
-    for i in range(len(Y)):
-        y = Y[i]
-        dot = weight_dot_feature_vec(v, f(history,y))
-        x[i] = np.exp(dot)
-        normalizer += x[i]
-    
-    return x / normalizer
 
 # Calculate for a single y in Y
-def softmax(weights, history, f, Y):
-    y = Y[0]
-    x = 0
-    normalizer = 0
-    for i in range(len(Y)):
-        y = Y[i]
-        dot = weight_dot_feature_vec(weights, f(history,history[4]))
-        if y == history[4]:
-            x = np.exp(dot)   
-        normalizer += np.exp(dot)
+# def softmax(weights, history, f, Y):
+#     y = Y[0]
+#     x = 0
+#     normalizer = 0
+#     for i in range(len(Y)):
+#         y = Y[i]
+#         dot = weight_dot_feature_vec(weights, f(history,history[4]))
+#         if y == history[4]:
+#             x = np.exp(dot)   
+#         normalizer += np.exp(dot)
     
-    return x / normalizer
+#     return x / normalizer
 
 # softmax(v, h, gen.transform, tags)
 
