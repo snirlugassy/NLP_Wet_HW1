@@ -57,3 +57,61 @@ STOP: TOTAL NO. of ITERATIONS REACHED LIMIT
 
  Total User time 0.000E+00 seconds.
 
+Dimension =  5252
+Weights were found in file
+ This problem is unconstrained.
+RUNNING THE L-BFGS-B CODE
+
+           * * *
+
+Machine precision = 2.220D-16
+ N =         5252     M =           10
+
+At X0         0 variables are exactly at the bounds
+
+At iterate    0    f=  4.40628D+04    |proj g|=  1.02344D+01
+
+At iterate   10    f=  4.40579D+04    |proj g|=  5.64961D+00
+
+At iterate   20    f=  4.40538D+04    |proj g|=  1.03563D+01
+
+At iterate   30    f=  4.40512D+04    |proj g|=  4.60046D+00
+
+At iterate   40    f=  4.40499D+04    |proj g|=  7.78190D+00
+
+At iterate   50    f=  4.40495D+04    |proj g|=  6.87075D-01
+
+At iterate   60    f=  4.40493D+04    |proj g|=  3.14645D+00
+
+At iterate   70    f=  4.40493D+04    |proj g|=  8.98870D-01
+
+At iterate   80    f=  4.40492D+04    |proj g|=  1.90811D+00
+
+At iterate   90    f=  4.40492D+04    |proj g|=  3.92580D-01
+
+At iterate  100    f=  4.40492D+04    |proj g|=  1.85462D-01
+
+           * * *
+
+Tit   = total number of iterations
+Tnf   = total number of function evaluations
+Tnint = total number of segments explored during Cauchy searches
+Skip  = number of BFGS updates skipped
+Nact  = number of active bounds at final generalized Cauchy point
+Projg = norm of the final projected gradient
+F     = final function value
+
+           * * *
+
+   N    Tit     Tnf  Tnint  Skip  Nact     Projg        F
+ 5252    100    107      1     0     0   1.855D-01   4.405D+04
+  F =   44049.209894240747     
+
+STOP: TOTAL NO. of ITERATIONS REACHED LIMIT                 
+
+ Cauchy                time 0.000E+00 seconds.
+ Subspace minimization time 0.000E+00 seconds.
+ Line search           time 0.000E+00 seconds.
+
+ Total User time 0.000E+00 seconds.
+
