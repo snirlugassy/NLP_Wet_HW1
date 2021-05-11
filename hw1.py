@@ -2,12 +2,12 @@ import string
 from collections import OrderedDict, Counter, defaultdict
 from enum import Enum
 import numpy as np
-from utils import is_numeric, weight_dot_feature_vec, softmax
+from utils import is_numeric, weight_dot_feature_vec
 import pickle
 from scipy.optimize import fmin_l_bfgs_b
 from datetime import datetime
 from numba import jit
-
+from utils import word_prefixes, word_suffixes
 
 # training_data = "/content/drive/MyDrive/Technion/Semester 6/NLP/Homework/Wet 1/data/train1.wtag"
 training_data = "data/train1.wtag"
@@ -77,10 +77,27 @@ class Features(Enum):
     BIGRAM_TAG_SEQ = ("bigram_tag_sequence", True)
     UNIGRAM_TAG = ("unigram_tag", True)
     
+    @staticmethod
+    def default_thresholds():
+        return {
+            Features.WORD_TAG:10,
+            Features.PWORD_TAG:10,
+            Features.SUFFIX_TAG:10,
+            Features.PREFIX_TAG:10,
+            Features.INIT_CAPITAL_TAG:10,
+            Features.PUNC_TAG:10,
+            Features.PPUNC_TAG:10,
+            Features.SHORT_WORD_TAG:10,
+            Features.NUMERIC_TAG:10,
+            Features.TRIGRAM_TAG_SEQ:10,
+            Features.BIGRAM_TAG_SEQ:10,
+            Features.UNIGRAM_TAG:10
+        }
+
 
 class TaggingFeatureGenerator:
-    def __init__(self, threshold=10, short_word_length=2):
-        self.threshold = threshold
+    def __init__(self, thresholds=Features.default_thresholds(), short_word_length=2):
+        self.thresholds = thresholds
         self.short_word_length = short_word_length
         self.feature_statistics = None
         self.features = None
@@ -118,20 +135,34 @@ class TaggingFeatureGenerator:
                 self.feature_statistics[Features.PWORD_TAG][(pword, tag)] += 1
 
             # PREFIX_TAG COUNT
-            for prefix in self.prefixes:
-                if word.lower().startswith(prefix):
-                    if (prefix, tag) not in self.feature_statistics[Features.PREFIX_TAG]:
-                        self.feature_statistics[Features.PREFIX_TAG][(prefix, tag)] = 1
-                    else:
-                        self.feature_statistics[Features.PREFIX_TAG][(prefix, tag)] += 1
+            # for prefix in self.prefixes:
+            #     if word.lower().startswith(prefix):
+            #         if (prefix, tag) not in self.feature_statistics[Features.PREFIX_TAG]:
+            #             self.feature_statistics[Features.PREFIX_TAG][(prefix, tag)] = 1
+            #         else:
+            #             self.feature_statistics[Features.PREFIX_TAG][(prefix, tag)] += 1
 
-            # SUFFIX_TAG COUNT
-            for suffix in self.suffixes:
-                if word.lower().endswith(suffix):
-                    if (suffix, tag) not in self.feature_statistics[Features.SUFFIX_TAG]:
-                        self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] = 1
-                    else:
-                        self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] += 1
+            # PREFIX_TAG_COUNT
+            for prefix in word_prefixes(word):
+                if (prefix, tag) not in self.feature_statistics[Features.PREFIX_TAG]:
+                    self.feature_statistics[Features.PREFIX_TAG][(prefix, tag)] = 1
+                else:
+                    self.feature_statistics[Features.PREFIX_TAG][(prefix, tag)] += 1
+
+            # SUFFIX_TAG_COUNT
+            for suffix in word_suffixes(word):
+                if (suffix, tag) not in self.feature_statistics[Features.SUFFIX_TAG]:
+                    self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] = 1
+                else:
+                    self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] += 1
+
+            # # SUFFIX_TAG COUNT
+            # for suffix in self.suffixes:
+            #     if word.lower().endswith(suffix):
+            #         if (suffix, tag) not in self.feature_statistics[Features.SUFFIX_TAG]:
+            #             self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] = 1
+            #         else:
+            #             self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] += 1
 
             # INIT_CAPITAL_TAG COUNT
             if word[0].isupper() and ppword != "*" and pword != "*":
@@ -204,7 +235,7 @@ class TaggingFeatureGenerator:
             if feature.value[1]:
                 filtered_features = OrderedDict()
                 for key in self.feature_statistics[feature].keys():
-                    if self.feature_statistics[feature][key] > self.threshold:
+                    if self.feature_statistics[feature][key] > self.thresholds[feature]:
                         filtered_features[key] = feature_id
                         feature_id += 1
                 self.features[feature] = filtered_features
@@ -234,14 +265,25 @@ class TaggingFeatureGenerator:
             if (pword, tag) in self.features[Features.PWORD_TAG]:
                 feature_vec.append(self.features[Features.PWORD_TAG][(pword, tag)])
             
+            # # SUFFIX_TAG
+            # for suffix in self.suffixes:
+            #     if word.lower().endswith(suffix) and (suffix, tag) in self.features[Features.SUFFIX_TAG]:
+            #         feature_vec.append(self.features[Features.SUFFIX_TAG][(suffix, tag)])
+            
+            # # PREFIX_TAG
+            # for prefix in self.prefixes:
+            #     if word.lower().startswith(prefix) and (prefix, tag) in self.features[Features.PREFIX_TAG]:
+            #         feature_vec.append(self.features[Features.PREFIX_TAG][(prefix, tag)])
+            
+            
             # SUFFIX_TAG
-            for suffix in self.suffixes:
-                if word.lower().endswith(suffix) and (suffix, tag) in self.features[Features.SUFFIX_TAG]:
+            for suffix in word_suffixes(word):
+                if (suffix, tag) in self.features[Features.SUFFIX_TAG]:
                     feature_vec.append(self.features[Features.SUFFIX_TAG][(suffix, tag)])
             
             # PREFIX_TAG
-            for prefix in self.prefixes:
-                if word.lower().startswith(prefix) and (prefix, tag) in self.features[Features.PREFIX_TAG]:
+            for prefix in word_prefixes(word):
+                if (prefix, tag) in self.features[Features.PREFIX_TAG]:
                     feature_vec.append(self.features[Features.PREFIX_TAG][(prefix, tag)])
             
             # INIT_CAPITAL_TAG
@@ -354,21 +396,33 @@ def likelihood(v, H, f, Y, reg_param=1):
 # Calculate for all possible y in Y
 
 # Calculate for a single y in Y
-# def softmax(weights, history, f, Y):
-#     y = Y[0]
-#     x = 0
-#     normalizer = 0
-#     for i in range(len(Y)):
-#         y = Y[i]
-#         dot = weight_dot_feature_vec(weights, f(history,history[4]))
-#         if y == history[4]:
-#             x = np.exp(dot)   
-#         normalizer += np.exp(dot)
+def softmax(weights, history, f, Y):
+    y = Y[0]
+    x = 0
+    normalizer = 0
+    for i in range(len(Y)):
+        y = Y[i]
+        dot = weight_dot_feature_vec(weights, f(history,history[4]))
+        if y == history[4]:
+            x = np.exp(dot)   
+        normalizer += np.exp(dot)
     
-#     return x / normalizer
+    return x / normalizer
 
 # softmax(v, h, gen.transform, tags)
 
+def create_history(sentence, pptag, ptag, tag, i):
+    word = sentence[i]
+                        
+    if i == 0:
+        ptag = pptag = pword = ppword = "*"
+    elif i == 1:
+        ppword = pptag = "*"
+        pword = sentence[i-1]
+    else:
+        ppword = sentence[i-2]
+        pword = sentence[i-1]
+    return (pptag, ppword, ptag, pword, tag, word)
 
 class Viterbi:
     def __init__(self, tags, feature_gen_transform, sentence, weights):
@@ -379,20 +433,7 @@ class Viterbi:
         else:
             self.sentence = sentence
         self.w = weights
-    
-    @staticmethod
-    def create_history(sentence, pptag, ptag, tag, i):
-        word = sentence[i][0]
-                            
-        if i == 0:
-            ptag = pptag = pword = ppword = "*"
-        elif i == 1:
-            ppword = pptag = "*"
-            pword = sentence[i-1][0]
-        else:
-            ppword = sentence[i-2][0]
-            pword = sentence[i-1][0]
-        return (pptag, ppword, ptag, pword, tag, word)
+
    
     def run(self):
         table_prev = dict()
@@ -408,14 +449,14 @@ class Viterbi:
         
 
         for k in range(len(self.sentence)):
-            print("Viterbi k=",k)
+            print("Viterbi k =",k)
             # TODO: if k==0 or k==1
             for tag in self.tags:
                 for ptag in self.tags:
                     max_p_hist = 0
                     max_t = None
                     for t in self.tags:
-                        h = Viterbi.create_history(self.sentence, t, ptag, tag, k)
+                        h = create_history(self.sentence, t, ptag, tag, k)
                         p_hist = softmax(self.w, h, self.f, self.tags) * table_prev[(t,ptag)]
                         if p_hist > max_p_hist:
                             max_p_hist = p_hist
@@ -447,7 +488,11 @@ if __name__ == "__main__":
     histories = data.histories
     tags = list(data.tags)
 
-    gen = TaggingFeatureGenerator(threshold=10)
+    thresholds = Features.default_thresholds()
+    thresholds[Features.SUFFIX_TAG] = 100
+    thresholds[Features.PREFIX_TAG] = 100
+
+    gen = TaggingFeatureGenerator(thresholds)
     gen.generate_features(histories)
 
     dim = gen.feature_dim
@@ -471,7 +516,7 @@ if __name__ == "__main__":
 
     # # define 'args', that holds the arguments arg_1, arg_2, ... for 'calc_objective_per_iter' 
     args = (histories, gen.transform, tags, 2)
-    optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=100, iprint=1, maxls=4)
+    optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=500, iprint=1, maxls=4)
     weights = optimal_params[0]
 
     with open(weights_path, 'wb') as weights_file:

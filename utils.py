@@ -16,6 +16,14 @@ def is_numeric(x):
         return False
 
 
+def word_suffixes(word):
+    return [word[-4:], word[-3:], word[-2:], word[-1:]]
+
+
+def word_prefixes(word):
+    return [word[:1], word[:2], word[:3], word[:4]]
+
+
 def weight_dot_feature_vec(v,f):
     """
     
@@ -31,14 +39,14 @@ def weight_dot_feature_vec(v,f):
     return product
 
 
-def softmax(weights, history, f, Y):
-    y = Y[0]
-    x = np.zeros(len(Y))
-    normalizer = 0
-    for i in range(len(Y)):
-        y = Y[i]
-        dot = weight_dot_feature_vec(v, f(history,y))
-        x[i] = np.exp(dot)
-        normalizer += x[i]
+# def softmax(weights, history, f, Y):
+#     y = Y[0]
+#     x = np.zeros(len(Y))
+#     normalizer = 0
+#     for i in range(len(Y)):
+#         y = Y[i]
+#         dot = weight_dot_feature_vec(v, f(history,y))
+#         x[i] = np.exp(dot)
+#         normalizer += x[i]
     
-    return x / normalizer
+#     return x / normalizer
