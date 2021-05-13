@@ -54,7 +54,7 @@ class DataProcessing:
                     pptag = sentence[i-2][1]
                     pword = sentence[i-1][0]
                     ptag = sentence[i-1][1]
-                self.histories.append((pptag, ppword, ptag, pword, tag, word))
+                self.histories.append((pptag, ppword, ptag, pword, tag, word,i+1,len(sentence)))
         return self.histories
 
 
@@ -80,21 +80,32 @@ class Features(Enum):
     BIGRAM_TAG_SEQ = ("bigram_tag_sequence", True)
     UNIGRAM_TAG = ("unigram_tag", True)
     
+    FIRST_WORD_TAG = ("is_first_word", True)
+    LAST_WORD_TAG = ("is_last_word", True)
+    HAS_HYPHEN_TAG = ("contains_hypen_tag", True)
+    WHOLE_CAP = ("whole_word_caps", True)
+    
     @staticmethod
     def default_thresholds():
+        threshold = 10
         return {
-            Features.WORD_TAG:10,
-            Features.PWORD_TAG:10,
-            Features.SUFFIX_TAG:10,
-            Features.PREFIX_TAG:10,
-            Features.INIT_CAPITAL_TAG:10,
-            Features.PUNC_TAG:10,
-            Features.PPUNC_TAG:10,
-            Features.SHORT_WORD_TAG:10,
-            Features.NUMERIC_TAG:10,
-            Features.TRIGRAM_TAG_SEQ:10,
-            Features.BIGRAM_TAG_SEQ:10,
-            Features.UNIGRAM_TAG:10
+            Features.WORD_TAG:threshold,
+            Features.PWORD_TAG:threshold,
+            Features.SUFFIX_TAG:threshold,
+            Features.PREFIX_TAG:threshold,
+            Features.INIT_CAPITAL_TAG:threshold,
+            Features.PUNC_TAG:threshold,
+            Features.PPUNC_TAG:threshold,
+            Features.SHORT_WORD_TAG:threshold,
+            Features.NUMERIC_TAG:threshold,
+            Features.TRIGRAM_TAG_SEQ:threshold,
+            Features.BIGRAM_TAG_SEQ:threshold,
+            Features.UNIGRAM_TAG:threshold,
+            
+            Features.FIRST_WORD_TAG:threshold,
+            Features.LAST_WORD_TAG:threshold,
+            Features.HAS_HYPHEN_TAG:threshold,
+            Features.WHOLE_CAP:threshold
         }
 
 
@@ -124,6 +135,8 @@ class TaggingFeatureGenerator:
             pword = history[3]
             tag = history[4]
             word = history[5]
+            position = history[6]
+            sentence_length = history[7]
 
             # WORD_TAG COUNT
             if (word, tag) not in self.feature_statistics[Features.WORD_TAG]:
@@ -220,6 +233,35 @@ class TaggingFeatureGenerator:
             # 		numeric_tag_count[tag] = 1
             # 	else:
             # 		numeric_tag_count[tag] += 1
+            
+            # FIRST_WORD_TAG
+            if position == 1:
+                if tag not in self.feature_statistics[Features.FIRST_WORD_TAG]:
+                    self.feature_statistics[Features.FIRST_WORD_TAG][tag] = 1
+                else:
+                    self.feature_statistics[Features.FIRST_WORD_TAG][tag] += 1
+                    
+            # LAST_WORD_TAG
+            if position == sentence_length:
+                if tag not in self.feature_statistics[Features.LAST_WORD_TAG]:
+                    self.feature_statistics[Features.LAST_WORD_TAG][tag] = 1
+                else:
+                    self.feature_statistics[Features.LAST_WORD_TAG][tag] += 1
+                    
+            # HAS_HYPHEN_TAG
+            if "-" in word:
+                if tag not in self.feature_statistics[Features.HAS_HYPHEN_TAG]:
+                    self.feature_statistics[Features.HAS_HYPHEN_TAG][tag] = 1
+                else:
+                    self.feature_statistics[Features.HAS_HYPHEN_TAG][tag] += 1
+                    
+            # WHOLE_CAP
+            if word.isupper():
+                if tag not in self.feature_statistics[Features.WHOLE_CAP]:
+                    self.feature_statistics[Features.WHOLE_CAP][tag] = 1
+                else:
+                    self.feature_statistics[Features.WHOLE_CAP][tag] += 1
+
 
 
     def generate_features(self, histories):
@@ -259,6 +301,8 @@ class TaggingFeatureGenerator:
             ptag = history[2]
             pword = history[3]
             word = history[5]
+            position = history[6]
+            sentence_length = history[7]
 
             # WORD_TAG
             if (word, tag) in self.features[Features.WORD_TAG]:
@@ -324,6 +368,22 @@ class TaggingFeatureGenerator:
             if tag in self.features[Features.UNIGRAM_TAG]:
                 feature_vec.append(self.features[Features.UNIGRAM_TAG][tag])
                 
+            # FIRST_WORD_TAG
+            if position == 1 and tag in self.features[Features.FIRST_WORD_TAG]:
+                feature_vec.append(self.features[Features.FIRST_WORD_TAG][tag])
+                    
+            # LAST_WORD_TAG
+            if position == sentence_length and tag in self.features[Features.LAST_WORD_TAG]:
+                feature_vec.append(self.features[Features.LAST_WORD_TAG][tag])
+                    
+            # HAS_HYPHEN_TAG
+            if "-" in word and tag in self.features[Features.HAS_HYPHEN_TAG]:
+                feature_vec.append(self.features[Features.HAS_HYPHEN_TAG][tag])
+                    
+            # WHOLE_CAP
+            if word.isupper() and tag in self.features[Features.WHOLE_CAP]:
+                feature_vec.append(self.features[Features.WHOLE_CAP][tag])
+                    
             return np.array(feature_vec)
         return None
 
@@ -421,8 +481,8 @@ if __name__ == "__main__":
     tags = list(data.tags)
 
     thresholds = Features.default_thresholds()
-    thresholds[Features.SUFFIX_TAG] = 100
-    thresholds[Features.PREFIX_TAG] = 100
+    # thresholds[Features.SUFFIX_TAG] = 100
+    # thresholds[Features.PREFIX_TAG] = 100
 
     gen = TaggingFeatureGenerator(thresholds)
     gen.generate_features(histories)

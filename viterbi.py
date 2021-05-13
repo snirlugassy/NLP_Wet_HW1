@@ -85,8 +85,8 @@ if __name__ == "__main__":
     histories = data.histories
     
     thresholds = Features.default_thresholds()
-    thresholds[Features.SUFFIX_TAG] = 100
-    thresholds[Features.PREFIX_TAG] = 100
+    # thresholds[Features.SUFFIX_TAG] = 10
+    # thresholds[Features.PREFIX_TAG] = 10
     
     gen = TaggingFeatureGenerator(thresholds)
     gen.generate_features(histories)
