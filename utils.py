@@ -60,7 +60,7 @@ def softmax(weights, history, f, Y):
     normalizer = 0
     for i in range(len(Y)):
         y = Y[i]
-        dot = weight_dot_feature_vec(weights, f(history,history[4]))
+        dot = weight_dot_feature_vec(weights, f(history,y))
         if y == history[4]:
             x = np.exp(dot)   
         normalizer += np.exp(dot)
