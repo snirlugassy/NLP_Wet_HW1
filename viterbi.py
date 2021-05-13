@@ -2,7 +2,7 @@ import pickle
 from hw1 import DataProcessing, TaggingFeatureGenerator, Features
 from utils import softmax
 from time import time
-
+import numpy as np
 
 def create_history(sentence, pptag, ptag, tag, i):
     word = sentence[i]
@@ -18,7 +18,7 @@ def create_history(sentence, pptag, ptag, tag, i):
     return (pptag, ppword, ptag, pword, tag, word)
 
 class Viterbi:
-    def __init__(self, tags, feature_gen_transform, sentence, weights):
+    def __init__(self, tags, feature_gen_transform, sentence, weights, beam_width=20):
         self.tags = tags
         self.f = feature_gen_transform
         if isinstance(sentence, str):
@@ -26,6 +26,7 @@ class Viterbi:
         else:
             self.sentence = sentence
         self.w = weights
+        self.bw = beam_width
 
    
     def run(self):
@@ -49,14 +50,21 @@ class Viterbi:
                     max_p_hist = 0
                     max_t = None
                     for t in self.tags:
-                        h = create_history(self.sentence, t, ptag, tag, k)
-                        p_hist = softmax(self.w, h, self.f, self.tags) * table_prev[(t,ptag)]
-                        if p_hist > max_p_hist:
-                            max_p_hist = p_hist
-                            max_t = t
+                        # Part of the beam search - ignores states with 0 score
+                        if table_prev[(t,ptag)] > 0:
+                            h = create_history(self.sentence, t, ptag, tag, k)
+                            p_hist = softmax(self.w, h, self.f, self.tags) * table_prev[(t,ptag)]
+                            if p_hist > max_p_hist:
+                                max_p_hist = p_hist
+                                max_t = t
                     table_curr[(ptag,tag)] = max_p_hist
                     backpointers[(k,ptag,tag)] = max_t
-            table_prev = table_curr
+                    
+            # Beam search filter goes here
+            values = [(key,value) for key,value in table_curr.items()]
+            values.sort(key=lambda x: x[1], reverse=True)
+            values = [values[i] if i < self.bw else (values[i][0],0) for i in range(len(values))]
+            table_prev = dict(values)
             table_curr = dict()
         
         tags_predict = list()
@@ -88,15 +96,22 @@ if __name__ == "__main__":
         with open("weights_backup.pkl", 'rb') as weights_file:
             last_run_params = pickle.load(weights_file)
             w_0 = last_run_params[0]
+            if len(w_0) != gen.feature_dim:
+                print("Dimension of weights are incorrect, settings random weights")
+                w_0 = np.random.random(gen.feature_dim)
     except FileNotFoundError:
         print("Weights were not found")
         exit(0)
     
 
     sentence = [x[0] for x in data.data[2]]
-    viterbi = Viterbi(tags, gen.transform, sentence, w_0)
+    ground_truth = [x[1] for x in data.data[2]]
+    viterbi = Viterbi(tags, gen.transform, sentence, w_0, beam_width=50)
     t0 = time()
     predicted_tags = viterbi.run()
     print(time()-t0, "seconds passed")
     print(sentence)
     print(predicted_tags)
+    print(ground_truth)
+    print([predicted_tags[i]==ground_truth[i] for i in range(len(ground_truth))])
+        
