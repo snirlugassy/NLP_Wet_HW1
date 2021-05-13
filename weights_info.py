@@ -1,5 +1,5 @@
 import pickle
-from hw1 import DataProcessing, TaggingFeatureGenerator, likelihood
+from hw1 import DataProcessing, TaggingFeatureGenerator, likelihood, Features
 from time import time
 import numpy as np
 
@@ -9,7 +9,10 @@ if __name__ == "__main__":
     data = DataProcessing(data_path)
     data.process()
     histories = data.histories
-    gen = TaggingFeatureGenerator(threshold=10)
+    thresholds = Features.default_thresholds()
+    thresholds[Features.SUFFIX_TAG] = 100
+    thresholds[Features.PREFIX_TAG] = 100
+    gen = TaggingFeatureGenerator(thresholds)
     gen.generate_features(histories)
     tags = list(data.tags)
     
