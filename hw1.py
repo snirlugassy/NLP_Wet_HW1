@@ -393,89 +393,6 @@ def likelihood(v, H, f, Y, reg_param=1):
 # likelihood(w_0, histories, gen.transform, tags)
 
 
-# Calculate for all possible y in Y
-
-# Calculate for a single y in Y
-def softmax(weights, history, f, Y):
-    y = Y[0]
-    x = 0
-    normalizer = 0
-    for i in range(len(Y)):
-        y = Y[i]
-        dot = weight_dot_feature_vec(weights, f(history,history[4]))
-        if y == history[4]:
-            x = np.exp(dot)   
-        normalizer += np.exp(dot)
-    
-    return x / normalizer
-
-# softmax(v, h, gen.transform, tags)
-
-def create_history(sentence, pptag, ptag, tag, i):
-    word = sentence[i]
-                        
-    if i == 0:
-        ptag = pptag = pword = ppword = "*"
-    elif i == 1:
-        ppword = pptag = "*"
-        pword = sentence[i-1]
-    else:
-        ppword = sentence[i-2]
-        pword = sentence[i-1]
-    return (pptag, ppword, ptag, pword, tag, word)
-
-class Viterbi:
-    def __init__(self, tags, feature_gen_transform, sentence, weights):
-        self.tags = tags
-        self.f = feature_gen_transform
-        if isinstance(sentence, str):
-            self.sentence = sentence.split(" ")
-        else:
-            self.sentence = sentence
-        self.w = weights
-
-   
-    def run(self):
-        table_prev = dict()
-        table_curr = dict()
-        backpointers = dict()
-        
-        for t1 in self.tags:
-            for t2 in self.tags:
-                table_prev[(t1,t2)] = 0
-                # table_curr[(t1,t2)] = 0
-        
-        table_prev[("*","*")] = 1
-        
-
-        for k in range(len(self.sentence)):
-            print("Viterbi k =",k)
-            # TODO: if k==0 or k==1
-            for tag in self.tags:
-                for ptag in self.tags:
-                    max_p_hist = 0
-                    max_t = None
-                    for t in self.tags:
-                        h = create_history(self.sentence, t, ptag, tag, k)
-                        p_hist = softmax(self.w, h, self.f, self.tags) * table_prev[(t,ptag)]
-                        if p_hist > max_p_hist:
-                            max_p_hist = p_hist
-                            max_t = t
-                    table_curr[(ptag,tag)] = max_p_hist
-                    backpointers[(k,ptag,tag)] = max_t
-            table_prev = table_curr
-            table_curr = dict()
-        
-        tags_predict = list()
-        max_ptag, max_tag = max(table_prev.items(), key=lambda x:x[1])[0]
-        tags_predict.append(max_tag)
-        tags_predict.append(max_ptag)
-        
-        for k in range(len(self.sentence)-3, -1, -1):
-            tags_predict.append(backpointers[(k+2, tags_predict[-1], tags_predict[-2])])
-        
-        return tags_predict
-        
 
 
 if __name__ == "__main__":
@@ -525,12 +442,3 @@ if __name__ == "__main__":
     with open("log.txt", "a") as log_file:
         log_file.write("Finished: " + datetime.now().isoformat() + "\n")
         
-
-
-
-
-    # for i in range(10):
-    #     h = histories[i]
-    #     x = softmax(v, h, gen.transform, tags)
-    #     print(x)
-    #     print(sum(x))
