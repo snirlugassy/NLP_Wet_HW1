@@ -93,7 +93,7 @@ if __name__ == "__main__":
     tags = list(data.tags)
     
     try:
-        with open("weights_backup.pkl", 'rb') as weights_file:
+        with open("weights1.pkl", 'rb') as weights_file:
             last_run_params = pickle.load(weights_file)
             w_0 = last_run_params[0]
             if len(w_0) != gen.feature_dim:
@@ -103,9 +103,10 @@ if __name__ == "__main__":
         print("Weights were not found")
         exit(0)
     
-
-    sentence = [x[0] for x in data.data[2]]
-    ground_truth = [x[1] for x in data.data[2]]
+    test_i = 200
+    sentence = [x[0] for x in data.data[test_i]]
+    print(sentence)
+    ground_truth = [x[1] for x in data.data[test_i]]
     viterbi = Viterbi(tags, gen.transform, sentence, w_0, beam_width=50)
     t0 = time()
     predicted_tags = viterbi.run()

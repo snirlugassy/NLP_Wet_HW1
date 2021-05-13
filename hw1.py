@@ -1,7 +1,9 @@
 import string
+import random
 from collections import OrderedDict, Counter, defaultdict
 from enum import Enum
 import numpy as np
+from numpy.random import choice
 from utils import is_numeric, weight_dot_feature_vec
 import pickle
 from scipy.optimize import fmin_l_bfgs_b
@@ -103,10 +105,10 @@ class TaggingFeatureGenerator:
         self.features = None
         self.feature_dim = None
         
-        self.suffixes = ['s', 'eer', 'er', 'ion', 'ity', 'ment', 'ness', 'or', 'sion', 'ship', 'th', 'able', 'ible', 'al', 'ant',
-                         'ary', 'ful', 'ic', 'ious', 'ous', 'ive', 'less', 'y', 'ed', 'en', 'er', 'ing', 'ize', 'ise', 'ly', 'ward', 'wise']
-        self.prefixes = ['anti', 'de', 'dis', 'en', 'em', 'fore', 'in', 'im', 'il', 'ir', 'inter',
-                         'mid', 'mis', 'non', 'over', 'pre', 're', 'semi', 'sub', 'super', 'trans', 'un', 'under']
+        # self.suffixes = ['s', 'eer', 'er', 'ion', 'ity', 'ment', 'ness', 'or', 'sion', 'ship', 'th', 'able', 'ible', 'al', 'ant',
+        #                  'ary', 'ful', 'ic', 'ious', 'ous', 'ive', 'less', 'y', 'ed', 'en', 'er', 'ing', 'ize', 'ise', 'ly', 'ward', 'wise']
+        # self.prefixes = ['anti', 'de', 'dis', 'en', 'em', 'fore', 'in', 'im', 'il', 'ir', 'inter',
+        #                  'mid', 'mis', 'non', 'over', 'pre', 're', 'semi', 'sub', 'super', 'trans', 'un', 'under']
 
     def calc_statistics(self, histories):
         self.feature_statistics = dict()
@@ -165,7 +167,7 @@ class TaggingFeatureGenerator:
             #             self.feature_statistics[Features.SUFFIX_TAG][(suffix, tag)] += 1
 
             # INIT_CAPITAL_TAG COUNT
-            if word[0].isupper() and ppword != "*" and pword != "*":
+            if word[0].isupper() and pword != "*":
                 if tag not in self.feature_statistics[Features.INIT_CAPITAL_TAG]:
                     self.feature_statistics[Features.INIT_CAPITAL_TAG][tag] = 1
                 else:
@@ -287,7 +289,7 @@ class TaggingFeatureGenerator:
                     feature_vec.append(self.features[Features.PREFIX_TAG][(prefix, tag)])
             
             # INIT_CAPITAL_TAG
-            if word[0].isupper() and ppword != "*" and pword != "*":
+            if word[0].isupper() and pword != "*":
                 if tag in self.features[Features.INIT_CAPITAL_TAG]:
                     feature_vec.append(self.features[Features.INIT_CAPITAL_TAG][tag])
                     
@@ -346,7 +348,7 @@ def history_likelihood(v, h, f, Y, h_count):
     return hl, hl_grad
     
     
-def likelihood(v, H, f, Y, reg_param=1):
+def likelihood(v, H, f, Y, reg_param):
     grad = np.zeros(len(v))
     L = 0
     histories_counter = Counter(H)
@@ -358,7 +360,19 @@ def likelihood(v, H, f, Y, reg_param=1):
     grad -= reg_param * v
     return (-1)*L, (-1)*grad
     
-    
+
+def sgd_likelihood(v, H, f, Y, reg_param):
+    H_sample = random.sample(H,k=len(H)/4)
+    grad = np.zeros(len(v))
+    L = 0
+    histories_counter = Counter(H_sample)
+    for h in histories_counter.keys():
+        hl, hl_grad = history_likelihood(v,h,f,Y,histories_counter[h])
+        L += hl
+        grad += hl_grad
+    # L -= 0.5 * reg_param * np.dot(v,v)
+    # grad -= reg_param * v
+    return (-1)*L, (-1)*grad
     
 # @jit(nopython=True, parallel=True)
 # def likelihood(v, H, f, Y, reg_param=1):
@@ -432,8 +446,8 @@ if __name__ == "__main__":
 
 
     # # define 'args', that holds the arguments arg_1, arg_2, ... for 'calc_objective_per_iter' 
-    args = (histories, gen.transform, tags, 2)
-    optimal_params = fmin_l_bfgs_b(func=likelihood, x0=w_0, args=args, maxiter=500, iprint=1, maxls=4)
+    args = (histories, gen.transform, tags, 0)
+    optimal_params = fmin_l_bfgs_b(func=sgd_likelihood, x0=w_0, args=args, maxiter=500, iprint=1, maxls=8)
     weights = optimal_params[0]
 
     with open(weights_path, 'wb') as weights_file:

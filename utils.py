@@ -32,7 +32,6 @@ def weight_dot_feature_vec(v,f):
     f: np.array sparse and compresed, if t in f then f_i = 1 and f_i = 0 otherwise
     
     """
-    
     product = 0
     for x in f:
         product += v[x]
@@ -55,7 +54,6 @@ def weight_dot_feature_vec(v,f):
 
 # Calculate for a single y in Y
 def softmax(weights, history, f, Y):
-    y = Y[0]
     x = 0
     normalizer = 0
     for i in range(len(Y)):
