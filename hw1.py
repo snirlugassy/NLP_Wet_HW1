@@ -1,5 +1,6 @@
 import string
 import random
+import math
 from collections import OrderedDict, Counter, defaultdict
 from enum import Enum
 import numpy as np
@@ -362,7 +363,7 @@ def likelihood(v, H, f, Y, reg_param):
     
 
 def sgd_likelihood(v, H, f, Y, reg_param):
-    H_sample = random.sample(H,k=len(H)/4)
+    H_sample = random.sample(H,k=math.floor(len(H)/4))
     grad = np.zeros(len(v))
     L = 0
     histories_counter = Counter(H_sample)
