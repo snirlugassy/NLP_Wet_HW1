@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     
     try:
-        with open("weights_backup.pkl", 'rb') as weights_file:
+        with open("weights.pkl", 'rb') as weights_file:
             last_run_params = pickle.load(weights_file)
             w_0 = last_run_params[0]
     except FileNotFoundError:

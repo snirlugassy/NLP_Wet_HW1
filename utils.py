@@ -39,6 +39,7 @@ def weight_dot_feature_vec(v,f):
     return product
 
 
+# Calculate for all possible y in Y
 # def softmax(weights, history, f, Y):
 #     y = Y[0]
 #     x = np.zeros(len(Y))
@@ -50,3 +51,19 @@ def weight_dot_feature_vec(v,f):
 #         normalizer += x[i]
     
 #     return x / normalizer
+
+
+# Calculate for a single y in Y
+def softmax(weights, history, f, Y):
+    y = Y[0]
+    x = 0
+    normalizer = 0
+    for i in range(len(Y)):
+        y = Y[i]
+        dot = weight_dot_feature_vec(weights, f(history,history[4]))
+        if y == history[4]:
+            x = np.exp(dot)   
+        normalizer += np.exp(dot)
+    
+    return x / normalizer
+
