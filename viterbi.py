@@ -15,7 +15,7 @@ def create_history(sentence, pptag, ptag, tag, i):
     else:
         ppword = sentence[i-2]
         pword = sentence[i-1]
-    return (pptag, ppword, ptag, pword, tag, word)
+    return (pptag, ppword, ptag, pword, tag, word, i , len(sentence))
 
 class Viterbi:
     def __init__(self, tags, feature_gen_transform, sentence, weights, beam_width=20):
