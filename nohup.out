@@ -642,3 +642,94 @@ CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH
 
  Total User time 0.000E+00 seconds.
 
+Dimension =  13022
+Weights were found in file
+Dimension of weights are incorrect, settings random weights
+ This problem is unconstrained.
+RUNNING THE L-BFGS-B CODE
+
+           * * *
+
+Machine precision = 2.220D-16
+ N =        13022     M =           10
+
+At X0         0 variables are exactly at the bounds
+
+At iterate    0    f=  3.28562D+04    |proj g|=  3.92763D+03
+
+At iterate    1    f=  2.70525D+04    |proj g|=  1.35446D+03
+
+At iterate    2    f=  2.23529D+04    |proj g|=  9.56235D+02
+
+At iterate    3    f=  1.76232D+04    |proj g|=  4.23336D+02
+
+At iterate    4    f=  1.33928D+04    |proj g|=  9.31281D+02
+
+At iterate    5    f=  1.12509D+04    |proj g|=  6.20229D+02
+
+At iterate    6    f=  1.03110D+04    |proj g|=  2.24915D+02
+
+At iterate    7    f=  9.46455D+03    |proj g|=  1.94669D+02
+
+At iterate    8    f=  8.82205D+03    |proj g|=  1.79486D+02
+
+At iterate    9    f=  8.05780D+03    |proj g|=  2.55154D+02
+
+At iterate   10    f=  7.46291D+03    |proj g|=  9.58224D+01
+
+At iterate   11    f=  7.25252D+03    |proj g|=  7.02355D+01
+
+At iterate   12    f=  6.99817D+03    |proj g|=  2.60629D+02
+
+At iterate   13    f=  6.59158D+03    |proj g|=  1.88529D+02
+
+At iterate   14    f=  6.47185D+03    |proj g|=  7.64217D+01
+
+At iterate   15    f=  6.20605D+03    |proj g|=  1.02860D+02
+
+At iterate   16    f=  6.04427D+03    |proj g|=  6.09436D+01
+
+At iterate   17    f=  5.88357D+03    |proj g|=  9.51540D+01
+
+At iterate   18    f=  5.84792D+03    |proj g|=  8.16309D+01
+
+At iterate   19    f=  5.75115D+03    |proj g|=  4.14157D+01
+
+At iterate   20    f=  5.56392D+03    |proj g|=  5.50581D+01
+
+At iterate   21    f=  5.54477D+03    |proj g|=  8.73919D+01
+
+At iterate   22    f=  5.34798D+03    |proj g|=  6.85998D+01
+
+At iterate   23    f=  5.24442D+03    |proj g|=  3.83906D+01
+
+At iterate   24    f=  5.13033D+03    |proj g|=  4.54466D+01
+
+At iterate   25    f=  5.03919D+03    |proj g|=  4.84000D+01
+
+At iterate   26    f=  5.14070D+03    |proj g|=  3.20000D+01
+
+           * * *
+
+Tit   = total number of iterations
+Tnf   = total number of function evaluations
+Tnint = total number of segments explored during Cauchy searches
+Skip  = number of BFGS updates skipped
+Nact  = number of active bounds at final generalized Cauchy point
+Projg = norm of the final projected gradient
+F     = final function value
+
+           * * *
+
+   N    Tit     Tnf  Tnint  Skip  Nact     Projg        F
+13022     26     33      1     0     0   3.200D+01   5.141D+03
+  F =   5140.7022861408350     
+
+CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
+
+ Cauchy                time 0.000E+00 seconds.
+ Subspace minimization time 0.000E+00 seconds.
+ Line search           time 0.000E+00 seconds.
+
+ Total User time 0.000E+00 seconds.
+

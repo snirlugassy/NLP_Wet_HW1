@@ -93,7 +93,7 @@ if __name__ == "__main__":
     tags = list(data.tags)
     
     try:
-        with open("weights1.pkl", 'rb') as weights_file:
+        with open("weights.pkl", 'rb') as weights_file:
             last_run_params = pickle.load(weights_file)
             w_0 = last_run_params[0]
             if len(w_0) != gen.feature_dim:
