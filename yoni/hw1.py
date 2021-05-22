@@ -85,7 +85,6 @@ class Features(Enum):
     HAS_HYPHEN_TAG = ("contains_hypen_tag", True)
     ALL_CAP = ("all_word_caps", True)
     PWORD_WORD_TAG = ("pword,word tag combinations",True)
-    
     @staticmethod
     def default_thresholds(threshold = 10):
         return {
